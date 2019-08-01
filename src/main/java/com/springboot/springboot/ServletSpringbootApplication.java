@@ -9,7 +9,7 @@ import org.springframework.boot.web.servlet.ServletComponentScan;
  * @create 2019-08-01 13:39
  */
 @SpringBootApplication
-@ServletComponentScan(basePackages = "com.springboot.springboot.servlet")
+//@ServletComponentScan(basePackages = "com.springboot.springboot.servlet")
 public class ServletSpringbootApplication {
     public static void main(String[] args) {
         SpringApplication.run(ServletSpringbootApplication.class, args);
