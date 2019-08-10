@@ -2,6 +2,7 @@ package com.springboot.springboot;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.ServletComponentScan;
 
 /**
@@ -12,6 +13,7 @@ import org.springframework.boot.web.servlet.ServletComponentScan;
 //@ServletComponentScan(basePackages = "com.springboot.springboot.servlet")
 public class ServletSpringbootApplication {
     public static void main(String[] args) {
+        // new SpringApplicationBuilder(ServletSpringbootApplication.class).run(args);
         SpringApplication.run(ServletSpringbootApplication.class, args);
     }
 }

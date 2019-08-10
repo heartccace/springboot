@@ -1,4 +1,5 @@
 # springboot  
+#文档源(https://docs.spring.io/spring-boot/docs/2.1.7.RELEASE/reference/htmlsingle/)
 一. 核心特性
 --------------
      组件自动装配:
@@ -75,8 +76,21 @@ SpringBoot应用
 -------------------
     SpringApplication: 失败分析、应用特性、时间监听
     SpringBoot 配置: 外部化配置、Profile、配置属性
-    
-    
+        1. 失败分析(FailureAnalysisReporter)
+        2. SpringBoot外部化配置
+            . ConfigurationProperty
+            . @Profile
+            . 配置属性(PropertySources)
+Spring Boot Actuator(运维管理)
+-----------------------------
+    端点: 各类Web和JMX Endpoints
+    健康检查: Health、HealthIndicator
+    指标: 内建Metrics、自定义Metrics
+Spring 模式注解装配
+    定义: 一种用于声名在应用中扮演"组件"角色的注解
+    举例: @Component、@Service、@Configuration等
+    装配: \<context:component-scan\>或者@ComponentScan
+            . 
         
    
     
