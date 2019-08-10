@@ -87,6 +87,7 @@ Spring Boot Actuator(运维管理)
     健康检查: Health、HealthIndicator
     指标: 内建Metrics、自定义Metrics
 Spring 模式注解装配
+--------------------------------------
     定义: 一种用于声名在应用中扮演"组件"角色的注解
     举例: @Component、@Service、@Configuration等
     装配: \<context:component-scan\>或者@ComponentScan
