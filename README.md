@@ -91,7 +91,23 @@ Spring 模式注解装配
     定义: 一种用于声名在应用中扮演"组件"角色的注解
     举例: @Component、@Service、@Configuration等
     装配: \<context:component-scan\>或者@ComponentScan
-            . 
+Spring @Enable 模块装配
+-----------------------------------------
+    定义: 具备相同领域功能组件集合,组合形成一个独立的单元
+    举例: @EnableWebMvc、@EnableAutoConfiguration等
+    实现方式: 注解驱动方式、接口编程方式
+        1. 注解驱动方式
+            . 实现
+                使用@Configuration注解
+        2. 接口变成方式
+            . 实现
+                实现接口Selector
+Spring 条件装配
+----------------------------------------
+    定义: Bean 装配的前置判断
+    举例: @Profile (3.1)、@Conditional (4.0)
+    实现: 注解方式、编程方式
+           . 
         
    
     
