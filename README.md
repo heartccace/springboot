@@ -126,6 +126,12 @@ SpringApplication
         配置: Spring Bean 来源
             java配置class(使用注解)或者xml上下文配置文件集合用于spring boot BeanDefinitionLoader读取，并将配置源解析为spring bean定义
         推断: web应用类型和主引导类
+            WebApplicationType#deduceFromClasspath在SpringApplication初始化时推导应用类型
+            SpringApplication#deduceMainApplicationClass推导主引导类
         加载: 应用上下文初始器和应用事件监听器
+            ApplicationContextInitializer应用上下文初始化器,可以调整容器结构，但是不能获取bean，此时bean未被初始化，
+            配置方式在MATA-INF/spring.factories文件中配置实现，可以根据@Order(org.springframework.core.annotation.Order)或者Ordered(org.springframework.core.Ordered)接口实现加载顺序
+            
+            
    
     
