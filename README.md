@@ -1,5 +1,7 @@
 # springboot  
 #文档源(https://docs.spring.io/spring-boot/docs/2.1.7.RELEASE/reference/htmlsingle/)
+
+
 一. 核心特性
 --------------
      组件自动装配:
@@ -107,7 +109,23 @@ Spring 条件装配
     定义: Bean 装配的前置判断
     举例: @Profile (3.1)、@Conditional (4.0)
     实现: 注解方式、编程方式
-           . 
-        
+Spring条件配置
+-------------------------------------------------
+    定义: 基于约定大于配置的原则，实现spring组件自动装配的目的
+    装配: 模式注解、@Enable模块、条件装配、工厂加载机制
+    实现: 激活自动装配、实现自动装配、配置自动装配实现
+        工厂加载机制实现类: SpringFactoriesLoader
+        配置资源:META-INFO/spring.factories
+SpringApplication 
+-----------------------------------------------
+    定义: Spring应用引导类,提供便利的自定义引导方法
+    场景: 嵌入式WeB应用和非Web应用
+    运行: SpringApplication#run(String...)
+            
+    1. 准备阶段
+        配置: Spring Bean 来源
+            java配置class(使用注解)或者xml上下文配置文件集合用于spring boot BeanDefinitionLoader读取，并将配置源解析为spring bean定义
+        推断: web应用类型和主引导类
+        加载: 应用上下文初始器和应用事件监听器
    
     
