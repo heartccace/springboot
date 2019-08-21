@@ -1,3 +1,13 @@
+# Initializers
+org.springframework.context.ApplicationContextInitializer=\
+com.springboot.springboot.context.HelloWorldApplicationContextInitializerAfter,\
+com.springboot.springboot.context.HelloWorldApplicationContextInitializer
+
 # Auto Configure
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 com.springboot.springboot.configuration.HelloWorldAutoConfiguration
+
+# Application Listeners
+org.springframework.context.ApplicationListener=\
+com.springboot.springboot.listener.HelloWorldApplicationListenerAfter,\
+com.springboot.springboot.listener.HelloWorldApplicationListener

@@ -131,7 +131,31 @@ SpringApplication
         加载: 应用上下文初始器和应用事件监听器
             ApplicationContextInitializer应用上下文初始化器,可以调整容器结构，但是不能获取bean，此时bean未被初始化，
             配置方式在MATA-INF/spring.factories文件中配置实现，可以根据@Order(org.springframework.core.annotation.Order)或者Ordered(org.springframework.core.Ordered)接口实现加载顺序
-            
-            
-   
+            监听根据ApplicationListener的实现来完成监听，主要包括事件源和事件发生时间，跟注册顺序无关，监听需要配置到MATA-INF/spring.factories文件中
+            SpringApplicationRunListener监听多个方法：
+                1. starting()    首次启动run方法时立即调用。可以用于非常早期初始化,Spring应用刚启动
+                2. environmentPrepared(ConfigurableEnvironment)  ConfigurableEnvironment准备妥当，允许将其调整
+                3. contextPrepared(ConfigurableApplicationContext) ConfigurableApplicationContextt准备妥当，允许将其调整
+                4. contextLoaded(ConfigurableApplicationContext)   ConfigurableApplicationContext已装载,但任未启动 
+                5. started(ConfigurableApplicationContext)         ConfigurableApplicationContext已启动,此时spring bean初始化完成
+                6. running(ConfigurableApplicationContext)         spring应用正在运行
+                7. failed(ConfigurableApplicationContext)          spring运用运行失败
+             SpringApplicationRunListener的唯一实现EventPublishingRunListener,与事件相关联
+     2. 运行阶段
+        创建: 应用上下文、Enviroment(抽象环境对象)、其他不重要
+        失败: 故障分析报告
+        回调: CommandLineRunner、ApplicationRunner
+        
+Spring FrameWork事件/监听编程模型
+------------------------------------------
+    1. Spring 应用事件
+        普通应用事件: ApplicationEvent
+        应用上下文事件: ApplicationContextEvent
+    2. Spring 应用监听器
+        接口编程模型: ApplicationListener
+        注解编程模型: @EventListener
+    3. Spring应用事件广播器
+        接口: ApplicationEventMulticaster
+        实现类: SimpleApplicationEventMulticaster
+            执行方式: 同步or异步
     
