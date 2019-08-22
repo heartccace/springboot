@@ -158,4 +158,13 @@ Spring FrameWork事件/监听编程模型
         接口: ApplicationEventMulticaster
         实现类: SimpleApplicationEventMulticaster
             执行方式: 同步or异步
-    
+EventPublishingRunListener监听方法与SpringBoot事件对应关系
+----------------------------------------------------------
+    监听方法                                 SpringBoot事件                                   SpringBoot起始版本
+    starting                                ApplicationStartingEvent                         1.5
+    environmentPrepared                     ApplicationEnvironmentPreparedEvent              1.0             
+    contextPrepared                         
+    contextLoaded                           ApplicationPreparedEvent                         1.0
+    started                                 ApplicationStartedEvent                          2.0
+    running                                 ApplicationReadyEvent                            2.0
+    failed                                  ApplicationFailedEvent                           1.0

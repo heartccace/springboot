@@ -11,3 +11,7 @@ com.springboot.springboot.configuration.HelloWorldAutoConfiguration
 org.springframework.context.ApplicationListener=\
 com.springboot.springboot.listener.HelloWorldApplicationListenerAfter,\
 com.springboot.springboot.listener.HelloWorldApplicationListener
+
+# Run Listeners
+org.springframework.boot.SpringApplicationRunListener=\
+com.springboot.springboot.event.HelloWorldRunListener
