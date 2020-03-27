@@ -26,4 +26,9 @@ public class MyController {
         person.setBirthday(new Date());
         return person;
     }
+
+    @GetMapping("/domain")
+    public Object getDomain() {
+        return this.getClass().getProtectionDomain();
+    }
 }
