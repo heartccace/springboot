@@ -67,7 +67,52 @@ public void run() throws Exception {
 
 运行过程：
 
-1、java -jar + jar或者war，根据系统类加载器去解析并加载meta-info下面的配置MANIFEST.MF中的Main-Class，结果根据jar或者war加载JarLauncher或者WarLauncher，即其中任意一个会去解析当前路径，加载BOOT-INFO下面的lib和class，根据MANIFEST.MF中的Start-Class启动应用程序
+1、java -jar + jar，根据系统类加载器去解析并加载meta-info下面的配置MANIFEST.MF中的Main-Class，结果根据jar加载JarLauncher，即其中任意一个会去解析当前路径，加载BOOT-INFO下面的lib和class，根据MANIFEST.MF中的Start-Class启动应用程序。
+
+- JarLauncher运行main方法
+
+  ```
+  //JarLauncher.class
+  public static void main(String[] args) throws Exception {
+  // 当前函数即父类构造函数初始化
+     new JarLauncher().launch(args);
+  }
+  ```
+
+- JarLauncher构造函数以及父类构造函数执行
+
+  ```
+  // ExecutableArchiveLauncher.calss
+  public ExecutableArchiveLauncher() {
+  		try {
+  		// 创建archive对象，主要用于获取第三方依赖和源码class，用于一面构造类加载器
+  			this.archive = createArchive();
+  		}
+  		catch (Exception ex) {
+  			throw new IllegalStateException(ex);
+  		}
+  	}
+  ```
+
+- 创建自定义类加载器
+
+  ```
+  // Launcher.class，用于加载BOOT-INF下的第三方类库和源码
+  protected ClassLoader createClassLoader(URL[] urls) throws Exception {
+  // 创建LaunchedURLClassLoader并设置父加载器为当前的类加载器即Lanucher@Appclassloader
+  		return new LaunchedURLClassLoader(urls, getClass().getClassLoader());
+  	}
+  	
+  	
+  		protected void launch(String[] args, String mainClass, ClassLoader classLoader) throws Exception {
+  		// 将创建好的LaunchedURLClassLoader设置为线程上线文
+  		Thread.currentThread().setContextClassLoader(classLoader);
+  		// 创建MainMethodRunner对象并运行main方法
+  		createMainMethodRunner(mainClass, args, classLoader).run();
+  	
+  ```
+
+  
 
 运行方式：
 
@@ -126,3 +171,377 @@ C:\Users\admin\Desktop\demo\target>java -agentlib:jdwp=transport=dt_socket,serve
 Listening for transport dt_socket at address: 9990
 ```
 
+在idea里面配置客户端详情
+
+![](https://github.com/heartccace/springboot/tree/master/src/main/resources/static/pics/JDWP.png)
+
+### 3、@SpringbootApplication注解详解
+
+@SpringbootApplication(属于springboot注解)是多个注解的组合体
+
+```
+// 标识该类是个配置类(属于springboot注解)
+@SpringBootConfiguration   //由@Configuration修饰
+// 启用自动配置
+@EnableAutoConfiguration(属于springboot注解)
+// 启用组件扫描
+@ComponentScan
+```
+
+#### 3.1、@Configuration详解
+
+// 表明声名一个或者多个被@Bean注解修饰方法的类可以在运行时被spring容器利用去生成bean definitions（bean定义）和服务请求，
+
+Indicates that a class declares one or more @Bean methods and may be processed by the Spring container to generate bean definitions and service requests for those beans at runtime, for example:
+   @Configuration
+   public class AppConfig {
+
+       @Bean
+       public MyBean myBean() {
+           // instantiate, configure and return bean ...
+       }
+//启用@Configuration类可以通过AnnotationConfigApplicationContext。
+
+Bootstrapping @Configuration classes
+Via AnnotationConfigApplicationContext
+@Configuration classes are typically bootstrapped using either AnnotationConfigApplicationContext or its web-capable variant, AnnotationConfigWebApplicationContext. A simple example with the former follows:
+   AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
+   ctx.register(AppConfig.class);
+   ctx.refresh();
+   MyBean myBean = ctx.getBean(MyBean.class);
+   // use myBean ...
+
+See the AnnotationConfigApplicationContext javadocs for further details, and see AnnotationConfigWebApplicationContext for web configuration instructions in a Servlet container.
+Via Spring <beans> XML
+As an alternative to registering @Configuration classes directly against an AnnotationConfigApplicationContext, @Configuration classes may be declared as normal <bean> definitions within Spring XML files:
+   <beans>
+      <context:annotation-config/>
+      <bean class="com.acme.AppConfig"/>
+   </beans>
+
+In the example above, <context:annotation-config/> is required in order to enable ConfigurationClassPostProcessor and other annotation-related post processors that facilitate handling @Configuration classes.
+Via component scanning
+@Configuration is meta-annotated with @Component, therefore @Configuration classes are candidates for component scanning (typically using Spring XML's <context:component-scan/> element) and therefore may also take advantage of @Autowired/@Inject like any regular @Component. In particular, if a single constructor is present autowiring semantics will be applied transparently for that constructor:
+   @Configuration
+   public class AppConfig {
+
+       private final SomeBean someBean;
+      
+       public AppConfig(SomeBean someBean) {
+           this.someBean = someBean;
+       }
+      
+       // @Bean definition using "SomeBean"
+
+   }
+
+// @Configuration类不仅可以使用组件扫描来引导，还可以自己使用@ComponentScan注释配置组件扫描：
+
+@Configuration classes may not only be bootstrapped using component scanning, but may also themselves configure component scanning using the @ComponentScan annotation:
+   @Configuration
+   @ComponentScan("com.acme.app.services")
+   public class AppConfig {
+       // various @Bean definitions ...
+   }
+See the @ComponentScan javadocs for details.
+Working with externalized values
+Using the Environment API
+Externalized values may be looked up by injecting the Spring org.springframework.core.env.Environment into a @Configuration class — for example, using the @Autowired annotation:
+   @Configuration
+   public class AppConfig {
+
+       @Autowired Environment env;
+      
+       @Bean
+       public MyBean myBean() {
+           MyBean myBean = new MyBean();
+           myBean.setName(env.getProperty("bean.name"));
+           return myBean;
+       }
+   }
+Properties resolved through the Environment reside in one or more "property source" objects, and @Configuration classes may contribute property sources to the Environment object using the @PropertySource annotation:
+   @Configuration
+   @PropertySource("classpath:/com/acme/app.properties")
+   public class AppConfig {
+
+       @Inject Environment env;
+      
+       @Bean
+       public MyBean myBean() {
+           return new MyBean(env.getProperty("bean.name"));
+       }
+   }
+See the Environment and @PropertySource javadocs for further details.
+Using the @Value annotation
+Externalized values may be injected into @Configuration classes using the @Value annotation:
+   @Configuration
+   @PropertySource("classpath:/com/acme/app.properties")
+   public class AppConfig {
+
+       @Value("${bean.name}") String beanName;
+      
+       @Bean
+       public MyBean myBean() {
+           return new MyBean(beanName);
+       }
+   }
+This approach is often used in conjunction with Spring's PropertySourcesPlaceholderConfigurer that can be enabled automatically in XML configuration via <context:property-placeholder/> or explicitly in a @Configuration class via a dedicated static @Bean method (see "a note on BeanFactoryPostProcessor-returning @Bean methods" of @Bean's javadocs for details). Note, however, that explicit registration of a PropertySourcesPlaceholderConfigurer via a static @Bean method is typically only required if you need to customize configuration such as the placeholder syntax, etc. Specifically, if no bean post-processor (such as a PropertySourcesPlaceholderConfigurer) has registered an embedded value resolver for the ApplicationContext, Spring will register a default embedded value resolver which resolves placeholders against property sources registered in the Environment. See the section below on composing @Configuration classes with Spring XML using @ImportResource; see the @Value javadocs; and see the @Bean javadocs for details on working with BeanFactoryPostProcessor types such as PropertySourcesPlaceholderConfigurer.
+Composing @Configuration classes
+With the @Import annotation
+@Configuration classes may be composed using the @Import annotation, similar to the way that <import> works in Spring XML. Because @Configuration objects are managed as Spring beans within the container, imported configurations may be injected — for example, via constructor injection:
+   @Configuration
+   public class DatabaseConfig {
+
+       @Bean
+       public DataSource dataSource() {
+           // instantiate, configure and return DataSource
+       }
+   }
+
+   @Configuration
+   @Import(DatabaseConfig.class)
+   public class AppConfig {
+
+       private final DatabaseConfig dataConfig;
+      
+       public AppConfig(DatabaseConfig dataConfig) {
+           this.dataConfig = dataConfig;
+       }
+      
+       @Bean
+       public MyBean myBean() {
+           // reference the dataSource() bean method
+           return new MyBean(dataConfig.dataSource());
+       }
+   }
+Now both AppConfig and the imported DatabaseConfig can be bootstrapped by registering only AppConfig against the Spring context:
+   new AnnotationConfigApplicationContext(AppConfig.class);
+With the @Profile annotation
+@Configuration classes may be marked with the @Profile annotation to indicate they should be processed only if a given profile or profiles are active:
+   @Profile("development")
+   @Configuration
+   public class EmbeddedDatabaseConfig {
+
+       @Bean
+       public DataSource dataSource() {
+           // instantiate, configure and return embedded DataSource
+       }
+   }
+
+   @Profile("production")
+   @Configuration
+   public class ProductionDatabaseConfig {
+
+       @Bean
+       public DataSource dataSource() {
+           // instantiate, configure and return production DataSource
+       }
+   }
+Alternatively, you may also declare profile conditions at the @Bean method level — for example, for alternative bean variants within the same configuration class:
+   @Configuration
+   public class ProfileDatabaseConfig {
+
+       @Bean("dataSource")
+       @Profile("development")
+       public DataSource embeddedDatabase() { ... }
+      
+       @Bean("dataSource")
+       @Profile("production")
+       public DataSource productionDatabase() { ... }
+   }
+See the @Profile and org.springframework.core.env.Environment javadocs for further details.
+With Spring XML using the @ImportResource annotation
+As mentioned above, @Configuration classes may be declared as regular Spring <bean> definitions within Spring XML files. It is also possible to import Spring XML configuration files into @Configuration classes using the @ImportResource annotation. Bean definitions imported from XML can be injected — for example, using the @Inject annotation:
+   @Configuration
+   @ImportResource("classpath:/com/acme/database-config.xml")
+   public class AppConfig {
+
+       @Inject DataSource dataSource; // from XML
+      
+       @Bean
+       public MyBean myBean() {
+           // inject the XML-defined dataSource bean
+           return new MyBean(this.dataSource);
+       }
+   }
+With nested @Configuration classes
+@Configuration classes may be nested within one another as follows:
+   @Configuration
+   public class AppConfig {
+
+       @Inject DataSource dataSource;
+      
+       @Bean
+       public MyBean myBean() {
+           return new MyBean(dataSource);
+       }
+      
+       @Configuration
+       static class DatabaseConfig {
+           @Bean
+           DataSource dataSource() {
+               return new EmbeddedDatabaseBuilder().build();
+           }
+       }
+   }
+When bootstrapping such an arrangement, only AppConfig need be registered against the application context. By virtue of being a nested @Configuration class, DatabaseConfig will be registered automatically. This avoids the need to use an @Import annotation when the relationship between AppConfig and DatabaseConfig is already implicitly clear.
+Note also that nested @Configuration classes can be used to good effect with the @Profile annotation to provide two options of the same bean to the enclosing @Configuration class.
+Configuring lazy initialization
+By default, @Bean methods will be eagerly instantiated at container bootstrap time. To avoid this, @Configuration may be used in conjunction with the @Lazy annotation to indicate that all @Bean methods declared within the class are by default lazily initialized. Note that @Lazy may be used on individual @Bean methods as well.
+Testing support for @Configuration classes
+The Spring TestContext framework available in the spring-test module provides the @ContextConfiguration annotation which can accept an array of component class references — typically @Configuration or @Component classes.
+   @RunWith(SpringRunner.class)
+   @ContextConfiguration(classes = {AppConfig.class, DatabaseConfig.class})
+   public class MyTests {
+
+       @Autowired MyBean myBean;
+      
+       @Autowired DataSource dataSource;
+      
+       @Test
+       public void test() {
+           // assertions against myBean ...
+       }
+   }
+See the TestContext framework  reference documentation for details.
+Enabling built-in Spring features using @Enable annotations
+Spring features such as asynchronous method execution, scheduled task execution, annotation driven transaction management, and even Spring MVC can be enabled and configured from @Configuration classes using their respective "@Enable" annotations. See @EnableAsync, @EnableScheduling, @EnableTransactionManagement, @EnableAspectJAutoProxy, and @EnableWebMvc for details.
+Constraints when authoring @Configuration classes
+Configuration classes must be provided as classes (i.e. not as instances returned from factory methods), allowing for runtime enhancements through a generated subclass.
+Configuration classes must be non-final (allowing for subclasses at runtime), unless the proxyBeanMethods flag is set to false in which case no runtime-generated subclass is necessary.
+Configuration classes must be non-local (i.e. may not be declared within a method).
+Any nested configuration classes must be declared as static.
+@Bean methods may not in turn create further configuration classes (any such instances will be treated as regular beans, with their configuration annotations remaining undetected).
+Since:
+3.0
+
+AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
+   ctx.register(AppConfig.class);
+   ctx.refresh();
+   MyBean myBean = ctx.getBean(MyBean.class);
+   // use myBean ...
+
+#### 3.2、@EnableAutoConfiguration
+
+
+
+```
+@AutoConfigurationPackage(springboot注解)
+@Import(AutoConfigurationImportSelector.class)
+```
+
+启用spring应用上下文自动配置功能，尝试猜测和配置你可能需要的beans。
+
+Enable auto-configuration of the Spring Application Context, attempting to guess and configure beans that 
+
+自动配置的应用通常基于类路径和你已经敌营的bean。
+
+you are likely to need. Auto-configuration classes are usually applied based on your classpath and what 
+
+比如，你有一个 tomcat-embedded.jar的包在你的类路径下，那么你很有可能需要一个TomcatServletWebServerFactory 的bean
+
+beans you have defined. For example, if you have tomcat-embedded.jar on your classpath you are likely to want a TomcatServletWebServerFactory (unless you have defined your own ServletWebServerFactory bean).
+
+当使用SpringBootApplication，容器的自动配置自动生效
+
+When using SpringBootApplication, the auto-configuration of the context is automatically enabled and 
+
+再添加额外的注解也没有额外的效果
+
+adding this annotation has therefore no additional effect.
+Auto-configuration tries to be as intelligent as possible and will back-away as you define more of your own configuration. You can always manually exclude() any configuration that you never want to apply (use excludeName() if you don't have access to them). You can also exclude them via the 
+
+自动配置总是在用户自定义bean被注册之后被应用
+
+spring.autoconfigure.exclude property. Auto-configuration is always applied after user-defined beans have been registered.
+The package of the class that is annotated with @EnableAutoConfiguration, usually via @SpringBootApplication, has specific significance and is often used as a 'default'. For example, it will be used when scanning for @Entity classes. It is generally recommended that you place @EnableAutoConfiguration (if you're not using @SpringBootApplication) in a root package so that all sub-packages and classes can be searched.
+Auto-configuration classes are regular Spring Configuration beans. They are located using the SpringFactoriesLoader mechanism (keyed against this class). Generally auto-configuration beans are @Conditional beans (most often using @ConditionalOnClass and @ConditionalOnMissingBean annotations).
+
+### 4、SpringApplication
+
+// 该类用于从一个main方法启动和配置一个Spring应用
+
+Class that can be used to bootstrap and launch a Spring application from a Java main method. By default 
+
+默认情况下，class将执行以下步骤来引导你的应用程序：
+
+class will perform the following steps to bootstrap your application:
+
+// 创建一个合适的应用上下文实例（取决于你的类路径）
+
+Create an appropriate ApplicationContext instance (depending on your classpath)
+
+// 注册一个命令行属性源去暴露命令行参数作为spring属性
+
+Register a CommandLinePropertySource to expose command line arguments as Spring properties
+
+// 刷新应用上下文，加载所有单例
+
+Refresh the application context, loading all singleton beans
+
+// 触发每一个CommandLineRunner  bean
+
+Trigger any CommandLineRunner beans
+
+// 在大多数情况下静态的run方法可以被你主方法直接调用去启动你的应用
+
+In most circumstances the static run(Class, String[]) method can be called directly from your main method to bootstrap your application:
+   @Configuration
+   @EnableAutoConfiguration
+   public class MyApplication  {
+
+     // ... Bean definitions
+      
+     public static void main(String[] args) {
+       SpringApplication.run(MyApplication.class, args);
+     }
+   }
+
+//对于更高级的配置，可以在运行之前创建和定制SpringApplication实例。
+
+For more advanced configuration a SpringApplication instance can be created and customized before being run:
+   public static void main(String[] args) {
+     SpringApplication application = new SpringApplication(MyApplication.class);
+     // ... customize application settings here
+     application.run(args)
+   }
+
+//SpringApplications 可以读取来自各种不同的来源。
+
+SpringApplications can read beans from a variety of different sources. It is generally recommended that a single @Configuration class is used to bootstrap your application, however, you may also set sources from:
+The fully qualified class name to be loaded by AnnotatedBeanDefinitionReader
+The location of an XML resource to be loaded by XmlBeanDefinitionReader, or a groovy script to be loaded by GroovyBeanDefinitionReader
+The name of a package to be scanned by ClassPathBeanDefinitionScanner
+Configuration properties are also bound to the SpringApplication. This makes it possible to set SpringApplication properties dynamically, like additional sources ("spring.main.sources" - a CSV list) the flag to indicate a web environment ("spring.main.web-application-type=none") or the flag to switch off the banner ("spring.main.banner-mode=off").
+See Also:
+run(Class, String[]), run(Class[], String[]), SpringApplication(Class...)
+
+
+
+运行分析：
+
+```
+
+// Application.class
+public static ConfigurableApplicationContext run(Class<?>[] primarySources, String[] args) {
+   return new SpringApplication(primarySources).run(args);
+}
+```
+
+new SpringApplication():Create a new SpringApplication instance. The application context will load beans from the specified primary sources（创建一个新的SpringApplication 实例，该实例会从指定原文件加载bean）
+
+
+
+```
+// Application.class
+public SpringApplication(ResourceLoader resourceLoader, Class<?>... primarySources) {
+   this.resourceLoader = resourceLoader;
+   Assert.notNull(primarySources, "PrimarySources must not be null");
+   this.primarySources = new LinkedHashSet<>(Arrays.asList(primarySources));
+   // 推断应用类型(web)
+   this.webApplicationType = WebApplicationType.deduceFromClasspath();
+   setInitializers((Collection) getSpringFactoriesInstances(ApplicationContextInitializer.class));
+   setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
+   this.mainApplicationClass = deduceMainApplicationClass();
+}
+```
