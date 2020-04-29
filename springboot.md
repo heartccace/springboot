@@ -540,8 +540,81 @@ public SpringApplication(ResourceLoader resourceLoader, Class<?>... primarySourc
    this.primarySources = new LinkedHashSet<>(Arrays.asList(primarySources));
    // 推断应用类型(web)
    this.webApplicationType = WebApplicationType.deduceFromClasspath();
+   // 查找classpath下面的meta-info目录，并加载spring.factories文件，将实现ApplicationContextInitializer接口的类实例化，并将实例对象保存到initializers的属性中
    setInitializers((Collection) getSpringFactoriesInstances(ApplicationContextInitializer.class));
+   // 查找classpath下面的meta-info目录，并加载spring.factories文件，将实现ApplicationListener接口的类实例化，并将实例对象保存到listeners的属性中
    setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
    this.mainApplicationClass = deduceMainApplicationClass();
 }
+
+
+private <T> Collection<T> getSpringFactoriesInstances(Class<T> type, Class<?>[] parameterTypes, Object... args) {
+// 获取类加载器，首先获取资源类加载器，获取不到就从线程上下文中获取，仍然获取就获取ClassUtils的类加载器
+		ClassLoader classLoader = getClassLoader();
+		// Use names and ensure unique to protect against duplicates
+		Set<String> names = new LinkedHashSet<>(SpringFactoriesLoader.loadFactoryNames(type, classLoader));
+		List<T> instances = createSpringFactoriesInstances(type, parameterTypes, classLoader, args, names);
+		AnnotationAwareOrderComparator.sort(instances);
+		return instances;
+	}
 ```
+
+
+
+### 5、SpringFactoryLoader
+
+框架内部内部使用的通用工厂加载机制。
+
+General purpose factory loading mechanism for internal use within the framework.
+
+SpringFactoriesLoader从类路径下的META-INF/spring.factories或类路径下多个jar文件中的META-INF/spring.factories加载和实例化所给类型
+
+SpringFactoriesLoader loads and instantiates factories of a given type from "META-INF/spring.factories" files which may be present in multiple JAR files in the classpath. The spring.factories file must be in Properties format, where the key is the fully qualified name of the interface or abstract class, and the value is a comma-separated list of implementation class names. For example:
+example.MyService=example.MyServiceImpl1,example.MyServiceImpl2
+where example.MyService is the name of the interface, and MyServiceImpl1 and MyServiceImpl2 are two implementations.
+
+### 6.ApplicationContext
+
+application context是一个为应用提供配置的核心接口，当应用运行时，是可读的。
+
+- 提供访问bean factory方法获取应用的组件
+- 加载资源文件的能力
+- 发布消息
+- 继承自夫context，优先级更高
+
+### 7.SpringApplicationRunListener和ApplicationListener
+
+SpringApplicationRunListener对springboot启动进行监听，在不同阶段调用EventPublishingRunListener，进行事件广播。调用springboot继承的spring的Application的类。
+
+```
+# pringboot事件 
+#在首次启动run方法时立即调用。 可以用于非常早期初始化
+ApplicationRunListener.starting() 对应的事件是 ApplicationStartingEvent	
+
+#一旦environment被准备，立即调用，但是在applicationcontext被创建前，
+ApplicationRunListener.environmentPrepared(ConfigurableEnvironment environment)对应事件ApplicationEnvironmentPreparedEvent
+
+#当application被创建和准备好之后立即调用，但是此时资源文件未被加载
+ApplicationRunListener.contextPrepared(ConfigurableApplicationContext context)对应事件ApplicationContextInitializedEvent
+
+
+#applicaiton context在加载完成之后，刷新之前被调用
+ApplicationRunListener.contextLoaded(ConfigurableApplicationContext context)对应事件ApplicationPreparedEvent
+ 
+
+#容器被刷新，启动但是此时未调用CommandLineRunner和ApplicationRunner
+ApplicationRunListener.started(ConfigurableApplicationContext context)对应事件ApplicationStartedEvent
+
+
+#在run方法完成前立即被调用，此时容器已经被刷新，CommandLineRunner和ApplicationRunner已经被调用
+ApplicationRunListener.running(ConfigurableApplicationContext context)对应事件ApplicationReadyEvent
+```
+
+#当应用运行发生异常时调用
+
+ApplicationRunListener.failed(ConfigurableApplicationContext context, Throwable exception)对应事件ApplicationFailedEvent
+
+### 8.日志
+
+
+

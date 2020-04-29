@@ -1,7 +1,8 @@
 # Initializers
 org.springframework.context.ApplicationContextInitializer=\
 com.springboot.springboot.context.HelloWorldApplicationContextInitializerAfter,\
-com.springboot.springboot.context.HelloWorldApplicationContextInitializer
+com.springboot.springboot.context.HelloWorldApplicationContextInitializer,\
+com.springboot.springboot.initialize.FirstInitializer
 
 # Auto Configure
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
@@ -10,8 +11,11 @@ com.springboot.springboot.configuration.HelloWorldAutoConfiguration
 # Application Listeners
 org.springframework.context.ApplicationListener=\
 com.springboot.springboot.listener.HelloWorldApplicationListenerAfter,\
-com.springboot.springboot.listener.HelloWorldApplicationListener
+com.springboot.springboot.listener.HelloWorldApplicationListener,\
+com.springboot.springboot.listener.SpringApplicationListener,\
+com.springboot.springboot.listener.CustomApplicationListener
 
 # Run Listeners
 org.springframework.boot.SpringApplicationRunListener=\
-com.springboot.springboot.event.HelloWorldRunListener
+com.springboot.springboot.event.HelloWorldRunListener,\
+com.springboot.springboot.listener.SpringBootApplicationRunnerListener

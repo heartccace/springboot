@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/base.xml" />
+    <logger name="com.springboot.springboot" level="debug"></logger>
+    <springProfile name="dev">
+        <logger name="com.springboot.springboot" level="info"></logger>
+    </springProfile>
+</configuration>
